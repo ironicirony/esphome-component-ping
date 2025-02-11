@@ -1,20 +1,19 @@
-// Copyright 2019 Espressif Systems (Shanghai) PTE LTD
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+/*
+ * SPDX-FileCopyrightText: 2019-2021 Espressif Systems (Shanghai) CO LTD
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
 #if defined(USE_ESP32)
 
 #pragma once
+
+#ifdef CONFIG_NEWLIB_NANO_FORMAT
+#define TASK_EXTRA_STACK_SIZE      (0)
+#else
+#define TASK_EXTRA_STACK_SIZE      (512)
+#endif
+#define ESP_TASK_PING_STACK             (2048 + TASK_EXTRA_STACK_SIZE)
 
 #ifdef __cplusplus
 extern "C" {
@@ -69,7 +68,8 @@ typedef struct {
     uint32_t interval_ms;     /*!< Milliseconds between each ping procedure */
     uint32_t timeout_ms;      /*!< Timeout value (in milliseconds) of each ping procedure */
     uint32_t data_size;       /*!< Size of the data next to ICMP packet header */
-    uint8_t tos;              /*!< Type of Service, a field specified in the IP header */
+    int tos;                  /*!< Type of Service, a field specified in the IP header */
+    int ttl;                  /*!< Time to Live,a field specified in the IP header */
     ip_addr_t target_addr;    /*!< Target IP address, either IPv4 or IPv6 */
     uint32_t task_stack_size; /*!< Stack size of internal ping task */
     uint32_t task_prio;       /*!< Priority of internal ping task */
@@ -87,8 +87,9 @@ typedef struct {
         .timeout_ms = 1000,              \
         .data_size = 64,                 \
         .tos = 0,                        \
+        .ttl = IP_DEFAULT_TTL,           \
         .target_addr = *(IP_ANY_TYPE),   \
-        .task_stack_size = 2048,         \
+        .task_stack_size = ESP_TASK_PING_STACK,         \
         .task_prio = 2,                  \
         .interface = 0,\
     }
@@ -101,6 +102,7 @@ typedef struct {
 */
 typedef enum {
     ESP_PING_PROF_SEQNO,   /*!< Sequence number of a ping procedure */
+    ESP_PING_PROF_TOS,     /*!< Type of service of a ping procedure */
     ESP_PING_PROF_TTL,     /*!< Time to live of a ping procedure */
     ESP_PING_PROF_REQUEST, /*!< Number of request packets sent out */
     ESP_PING_PROF_REPLY,   /*!< Number of reply packets received */
