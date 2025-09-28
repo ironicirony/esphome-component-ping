@@ -22,6 +22,7 @@
 #include "lwip/sockets.h"
 #include "ping_sock.h"
 #include "esp_err.h"
+#include <lwip/ip_addr.h>
 
 #include "esphome/components/sensor/sensor.h"
 
@@ -123,7 +124,9 @@ class PingSensorESP32 : public PingSensor {
       ESP_LOGD(TAG, "--- %s ping statistics ---", inet_ntoa(*ip_2_ip4(&target_addr)));
 #if CONFIG_LWIP_IPV6
     } else {
-      ESP_LOGD(TAG, "--- %s ping statistics ---", inet6_ntoa(*ip_2_ip6(&target_addr)));
+      char addr_str[IPADDR_STRLEN_MAX];
+      ipaddr_ntoa_r(&target_addr, addr_str, sizeof(addr_str));
+      ESP_LOGD(TAG, "--- %s ping statistics ---", addr_str);
     }
 #endif
     ESP_LOGD(TAG, "%d packets transmitted, %d received, %d%% packet loss, total time %dms avg time %dms", transmitted,
